@@ -1,0 +1,13 @@
+{
+    "id": "117661208081837046958",
+    "name": {"familyName": "MAGALHAES", "givenName": "Quentin"},
+    "displayName": "Quentin MAGALHAES",
+    "image": {
+        "url": "https://lh3.googleusercontent.com/a-/AOh14GidTJvuNq4NjG0zAHJb6lAH4H6tRUxaMPiDsER0=s50"
+    },
+    "emails": [{"value": "magalhaesquentin04@gmail.com", "type": "ACCOUNT"}],
+    "nickname": "Misttex",
+    "language": "fr",
+    "kind": "plus#person",
+    "etag": "%EgUCAwolLhoDAQUH",
+}
