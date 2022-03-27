@@ -50,14 +50,14 @@ def google_index():
     r.raise_for_status()
     data = r.json()
     # print(data)
-    emails = data["emails"]
+    """emails = data["emails"]
     for d in emails:
         emails = d["value"]
     with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
         if not emails in txt.read():
             file = open("new_users.txt", "a")
             file.writelines(f'{emails}\n')
-            file.close()
+            file.close()"""
     return render_template("index.html", name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
 
@@ -91,14 +91,14 @@ def newVM():
     r.raise_for_status()
     data = r.json()
     # print(data)
-    emails = data["emails"]
+    """emails = data["emails"]
     for d in emails:
         emails = d["value"]
     with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
         if not emails in txt.read():
             file = open("new_users.txt", "a")
             file.writelines(f'{emails}\n')
-            file.close()
+            file.close()"""
 
     return render_template("newVM.html",name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
@@ -115,13 +115,13 @@ def allVM():
     data = r.json()
     # print(data)
     emails = data["emails"]
-    for d in emails:
+    """for d in emails:
         emails = d["value"]
     with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
         if not emails in txt.read():
             file = open("new_users.txt", "a")
             file.writelines(f'{emails}\n')
-            file.close()
+            file.close()"""
 
     return render_template("allVM.html",name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
 
 
-
+"""
 def add_admin():
     utilisateur = 'remplacer par la variable utlisateur selectionné'
     with open('new_users.txt') and open('customers.txt') as addadmin:
@@ -174,3 +174,4 @@ def remove_permission():
             if line.strip("\n") != utilisateur:
                 delete.write(line)
     file.close()
+    """
