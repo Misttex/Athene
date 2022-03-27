@@ -1,5 +1,5 @@
 import sys
-import libvirt
+"""import libvirt
 
 conn = None
 try:
@@ -15,4 +15,4 @@ except libvirt.libvirtError as e:
 	print(reper(e),file=sys.stderr)
 	exit(1)
 
-conn.close()
+conn.close()"""
