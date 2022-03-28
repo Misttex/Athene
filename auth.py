@@ -13,11 +13,14 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 blueprint = make_google_blueprint()
 app.register_blueprint(blueprint, url_prefix="/accueil/")
 
+host_projet = '192.168.10.38'
+
 google_auth = GoogleClient(
     client_id=("554229061086-np1qvffgq6gi1f6njg99qkeqt4h2gaut"
                ".apps.googleusercontent.com"),
     client_secret="XqTsoS6DXq-W0KgTqvQISBOM",
-    redirect_uri="http://localhost:5000/google/oauth2callback",
+    redirect_uri="http://"+host_projet+"/google/oauth2callback",
+
 )
 
 #Par default si aucune route est spécifier envoie vers la route /Logout
@@ -122,7 +125,7 @@ def allVM():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True)
+    app.run(debug=True, port=80, host=host_projet)
 
 
 
