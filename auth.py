@@ -51,9 +51,10 @@ def google_index():
     r.raise_for_status()
     data = r.json()
 
-    listVMPerso = [["Ubuntu", "linux", "Machine fictif"],
-              ["Debian", "Linux", "Machine fictif"],
-              ["Windows S", "Windows", "Machine fictif"]]
+    listVMPerso = [["Ubuntu", "linux", "Machine fictif",0],
+              ["Debian", "Linux", "Machine fictif",1],
+              ["Windows Server", "Windows", "Machine fictif",0],
+              ["Rocky Linux", "Linux", "Machine fictif",1]]
     # print(data)
     """emails = data["emails"]
     for d in emails:
