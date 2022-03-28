@@ -24,13 +24,13 @@ google_auth = GoogleClient(
 
 )
 
-#Par default si aucune route est spécifier envoie vers la route /Logout
+#Par default si aucune route est spï¿½cifier envoie vers la route /Logout
 @app.route("/")
 def index():
     return redirect("/logout")
 
 
-#Route de déconnection
+#Route de dï¿½connection
 #Supprimer le token google
 @app.route("/logout")
 def logout():
@@ -57,10 +57,17 @@ def google_index():
     r.raise_for_status()
     data = r.json()
 
-    listVMPerso = [["Ubuntu", "linux", "Machine fictif",0],
-              ["Debian", "Linux", "Machine fictif",1],
-              ["Windows Server", "Windows", "Machine fictif",0],
-              ["Rocky Linux", "Linux", "Machine fictif",1]]
+    listVMPerso = []
+    conn = libvirt.open("qemu:///system")
+    mes_vms = conn.listDefinedDomains()
+    domains = conn.listAllDomains(0)
+    for domain in domains:
+        dom = conn.lookupByName(domain.name())
+        state, maxmem, mem, cpus, cput = dom.info()
+        tab = { 
+            "nom_machine":dom.name(),
+        }
+        listVMPerso.append(tab)
 
     return render_template("index.html",
                            name=" Bonjour, {}".format(data["displayName"]),
@@ -88,7 +95,7 @@ def google_oauth2callback():
 
 
 
-#Route pour afficher la page de création VM
+#Route pour afficher la page de crï¿½ation VM
 @app.route("/newVM")
 def newVM():
     if not session.get("access_token"):
@@ -115,19 +122,16 @@ def allVM():
     data = r.json()
 
     listVM = []
-
     conn = libvirt.open("qemu:///system")
     mes_vms = conn.listDefinedDomains()
     domains = conn.listAllDomains(0)
-
     for domain in domains:
         dom = conn.lookupByName(domain.name())
         state, maxmem, mem, cpus, cput = dom.info()
-        tab = {
-            "nom_machine": dom.name(),
+        tab = { 
+            "nom_machine":dom.name(),
         }
         listVM.append(tab)
-        print(listVM)
 
     return render_template("allVM.html",
                            name=" Bonjour, {}".format(data["displayName"]),
@@ -136,12 +140,14 @@ def allVM():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True, host=host_projet)
+    app.run(debug=True , host=host_projet)
+
+
 
 
 """
 def add_admin():
-    utilisateur = 'remplacer par la variable utlisateur selectionné'
+    utilisateur = 'remplacer par la variable utlisateur selectionnï¿½'
     with open('new_users.txt') and open('customers.txt') as addadmin:
         if user in addadmin.read():
             file = open('admins.txt', "a")
@@ -156,7 +162,7 @@ def add_admin():
 
 
 def add_customer():
-    utilisateur = 'remplacer par la variable utlisateur selectionné'
+    utilisateur = 'remplacer par la variable utlisateur selectionnï¿½'
     with open('new_users.txt') as addcustomer:
         if user in addcustomer.read():
             file = open('customers.txt', "a")

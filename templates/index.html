@@ -87,7 +87,7 @@
                 <div class="row align-items-center">
                     {%for mesVM in listVMPerso%}
                     <div class="card m-1" style="max-width: 20rem;">
-                        <div class="card-header"><h5 class="card-title">{{ mesVM[0] }}</h5></div>
+                        <div class="card-header"><h5 class="card-title">{{ mesVM.nom_machine }}</h5></div>
                         <div class="card-body">
                             <h6 class="card-subtitle mb-2 text-muted">
                                         {% if mesVM[1] =="Windows"%}
