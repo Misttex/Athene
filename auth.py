@@ -20,12 +20,14 @@ google_auth = GoogleClient(
     redirect_uri="http://localhost:5000/google/oauth2callback",
 )
 
-
+#Par default si aucune route est spécifier envoie vers la route /Logout
 @app.route("/")
 def index():
     return redirect("/logout")
 
 
+#Route de déconnection
+#Supprimer le token google
 @app.route("/logout")
 def logout():
     if session.get("access_token"):
@@ -55,15 +57,7 @@ def google_index():
               ["Debian", "Linux", "Machine fictif",1],
               ["Windows Server", "Windows", "Machine fictif",0],
               ["Rocky Linux", "Linux", "Machine fictif",1]]
-    # print(data)
-    """emails = data["emails"]
-    for d in emails:
-        emails = d["value"]
-    with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
-        if not emails in txt.read():
-            file = open("new_users.txt", "a")
-            file.writelines(f'{emails}\n')
-            file.close()"""
+
     return render_template("index.html", name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]),listVMPerso=listVMPerso)
 
@@ -96,15 +90,6 @@ def newVM():
         r = s.get("https://www.googleapis.com/plus/v1/people/me")
     r.raise_for_status()
     data = r.json()
-    # print(data)
-    """emails = data["emails"]
-    for d in emails:
-        emails = d["value"]
-    with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
-        if not emails in txt.read():
-            file = open("new_users.txt", "a")
-            file.writelines(f'{emails}\n')
-            file.close()"""
 
     return render_template("newVM.html",name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
@@ -124,16 +109,6 @@ def allVM():
               ["Debian","Linux","Machine fictif"],
               ["Windows S","Windows","Machine fictif"],
               ["Rocky Linux","Linux","Machine fictif"]]
-
-    # print(data)
-    """emails = data["emails"]
-    for d in emails:
-        emails = d["value"]
-    with open('new_users.txt') and open('admins.txt') and open('customers.txt') as txt:
-        if not emails in txt.read():
-            file = open("new_users.txt", "a")
-            file.writelines(f'{emails}\n')
-            file.close()"""
 
     return render_template("allVM.html",name="Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]),listVM=listVM)
