@@ -58,8 +58,10 @@ def google_index():
               ["Windows Server", "Windows", "Machine fictif",0],
               ["Rocky Linux", "Linux", "Machine fictif",1]]
 
-    return render_template("index.html", name="Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]),listVMPerso=listVMPerso)
+    return render_template("index.html",
+                           name=" Bonjour, {}".format(data["displayName"]),
+                           url=format(data["image"]["url"]),
+                           listVMPerso=listVMPerso)
 
 #Verification sur l'utilisateur est connecter
 @app.route("/google/oauth2callback")
@@ -80,6 +82,8 @@ def google_oauth2callback():
     session["access_token"] = usertoken.get("access_token")
     return redirect("/accueil/")
 
+
+
 #Route pour afficher la page de création VM
 @app.route("/newVM")
 def newVM():
@@ -91,7 +95,8 @@ def newVM():
     r.raise_for_status()
     data = r.json()
 
-    return render_template("newVM.html",name="Bonjour, {}".format(data["displayName"]),
+    return render_template("newVM.html",
+                           name=" Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
 
 #Route pour afficher la page pour consulter toutes les VM
@@ -110,8 +115,10 @@ def allVM():
               ["Windows S","Windows","Machine fictif"],
               ["Rocky Linux","Linux","Machine fictif"]]
 
-    return render_template("allVM.html",name="Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]),listVM=listVM)
+    return render_template("allVM.html",
+                           name=" Bonjour, {}".format(data["displayName"]),
+                           url=format(data["image"]["url"]),
+                           listVM=listVM)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
