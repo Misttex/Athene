@@ -114,10 +114,20 @@ def allVM():
     r.raise_for_status()
     data = r.json()
 
-    listVM = [["Ubuntu","linux","Machine fictif"],
-              ["Debian","Linux","Machine fictif"],
-              ["Windows S","Windows","Machine fictif"],
-              ["Rocky Linux","Linux","Machine fictif"]]
+    listVM = []
+
+    conn = libvirt.open("qemu:///system")
+    mes_vms = conn.listDefinedDomains()
+    domains = conn.listAllDomains(0)
+
+    for domain in domains:
+        dom = conn.lookupByName(domain.name())
+        state, maxmem, mem, cpus, cput = dom.info()
+        tab = {
+            "nom_machine": dom.name(),
+        }
+        listVM.append(tab)
+        print(listVM)
 
     return render_template("allVM.html",
                            name=" Bonjour, {}".format(data["displayName"]),
@@ -126,9 +136,7 @@ def allVM():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True , host=host_projet)
-
-
+    app.run(debug=True, host=host_projet)
 
 
 """
