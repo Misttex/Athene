@@ -8,7 +8,7 @@ from flask import Flask, request, redirect, session, render_template
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_login import logout_user
 import libvirt_connec
-host_projet = 'localhost'
+host_projet = '192.168.10.38'
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 blueprint = make_google_blueprint()
