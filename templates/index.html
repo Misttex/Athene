@@ -85,14 +85,17 @@
             </div>
             <div class="container">
                 <div class="row align-items-center">
-                    {%for i in range(0, 4)%}
+                    {%for mesVM in listVMPerso%}
                     <div class="card m-1" style="max-width: 20rem;">
-                        <div class="card-header"><h5 class="card-title">Nom de la machine</h5></div>
+                        <div class="card-header"><h5 class="card-title">{{ mesVM[0] }}</h5></div>
                         <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted"><span
-                                    class="badge rounded-pill bg-primary card-text">Windows</span> <span
-                                    class="badge rounded-pill bg-info">Linux</span></h6>
-                            <p class="card-text">Petite description</p>
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                    {% if mesVM[1] =="Windows"%}
+                                       <span class="badge rounded-pill bg-primary card-text">Windows</span>
+                                    {% else %}
+                                       <span class="badge rounded-pill bg-info card-text">Linux</span></h6>
+                                    {% endif %}
+                            <p class="card-text">{{ mesVM[2] }}</p>
                         </div>
                         <div class="card-footer text-muted">
                             <button type="button" class="btn btn-warning" onclick="maFonction()">Editer</button>

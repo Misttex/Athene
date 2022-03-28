@@ -50,6 +50,10 @@ def google_index():
         r = s.get("https://www.googleapis.com/plus/v1/people/me")
     r.raise_for_status()
     data = r.json()
+
+    listVMPerso = [["Ubuntu", "linux", "Machine fictif"],
+              ["Debian", "Linux", "Machine fictif"],
+              ["Windows S", "Windows", "Machine fictif"]]
     # print(data)
     """emails = data["emails"]
     for d in emails:
@@ -60,7 +64,7 @@ def google_index():
             file.writelines(f'{emails}\n')
             file.close()"""
     return render_template("index.html", name="Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]))
+                           url=format(data["image"]["url"]),listVMPerso=listVMPerso)
 
 #Verification sur l'utilisateur est connecter
 @app.route("/google/oauth2callback")
@@ -114,6 +118,12 @@ def allVM():
         r = s.get("https://www.googleapis.com/plus/v1/people/me")
     r.raise_for_status()
     data = r.json()
+
+    listVM = [["Ubuntu","linux","Machine fictif"],
+              ["Debian","Linux","Machine fictif"],
+              ["Windows S","Windows","Machine fictif"],
+              ["Rocky Linux","Linux","Machine fictif"]]
+
     # print(data)
     """emails = data["emails"]
     for d in emails:
@@ -125,7 +135,7 @@ def allVM():
             file.close()"""
 
     return render_template("allVM.html",name="Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]))
+                           url=format(data["image"]["url"]),listVM=listVM)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

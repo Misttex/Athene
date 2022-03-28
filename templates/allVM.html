@@ -86,14 +86,15 @@
                 <div class="row align-items-center">
                     {%for VM in listVM%}
                     <div class="card m-1" style="max-width: 20rem;">
-                        <div class="card-header"><h5 class="card-title">{{VM.NomVM}}</h5></div>
+                        <div class="card-header"><h5 class="card-title">{{VM[0]}}</h5></div>
                         <div class="card-body">
                             <h6 class="card-subtitle mb-2 text-muted">
-                                {% if VM.Type =="Windows"%}
+                                {% if VM[1] =="Windows"%}
                                     <span   class="badge rounded-pill bg-primary card-text">Windows</span>
                                 {%else%}
-                                    <span class="badge rounded-pill bg-info">Linux</span></h6>
-                            <p class="card-text">Petite description</p>
+                                    <span class="badge rounded-pill bg-info card-text">Linux</span></h6>
+                                {% endif %}
+                            <p class="card-text">{{VM[2]}}</p>
 
                         </div>
                     </div>
