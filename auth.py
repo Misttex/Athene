@@ -7,6 +7,7 @@ from requests_oauth2 import OAuth2BearerToken
 from flask import Flask, request, redirect, session, render_template
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_login import logout_user
+import pika
 import libvirt
 
 host_projet = 'localhost'
