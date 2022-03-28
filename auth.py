@@ -65,8 +65,28 @@ def google_index():
     for domain in domains:
         dom = conn.lookupByName(domain.name())
         state, maxmem, mem, cpus, cput = dom.info()
-        tab = { 
-            "nom_machine":dom.name(),
+        if state == libvirt.VIR_DOMAIN_NOSTATE:
+            state = 'VIR_DOMAIN_NOSTATE'
+        elif state == libvirt.VIR_DOMAIN_RUNNING:
+            state = '2'
+        elif state == libvirt.VIR_DOMAIN_BLOCKED:
+            state = '0'
+        elif state == libvirt.VIR_DOMAIN_PAUSED:
+            state = '1'
+        elif state == libvirt.VIR_DOMAIN_SHUTDOWN:
+            state = '0'
+        elif state == libvirt.VIR_DOMAIN_SHUTOFF:
+            state = '0'
+        elif state == libvirt.VIR_DOMAIN_CRASHED:
+            state = '0'
+        elif state == libvirt.VIR_DOMAIN_PMSUSPENDED:
+            state = '1'
+        else:
+            state = 'inconnu'
+        tab = {
+            "nom_machine": dom.name(),
+            "etat": state,
+            "uuid": dom.UUIDString(),
         }
         listVMPerso.append(tab)
 
