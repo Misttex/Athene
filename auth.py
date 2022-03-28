@@ -8,7 +8,7 @@ from flask import Flask, request, redirect, session, render_template
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_login import logout_user
 import libvirt_connec
-host_projet = '192.168.10.38'
+host_projet = 'localhost'
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 blueprint = make_google_blueprint()
@@ -20,7 +20,7 @@ google_auth = GoogleClient(
     client_id=("554229061086-np1qvffgq6gi1f6njg99qkeqt4h2gaut"
                ".apps.googleusercontent.com"),
     client_secret="XqTsoS6DXq-W0KgTqvQISBOM",
-    redirect_uri="http://"+host_projet+":80/google/oauth2callback",
+    redirect_uri="http://"+host_projet+":5000/google/oauth2callback",
 
 )
 
@@ -126,7 +126,7 @@ def allVM():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True, port=80, host=host_projet)
+    app.run(debug=True , host=host_projet)
 
 
 
