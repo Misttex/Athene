@@ -7,19 +7,19 @@ from flask import Flask, request, redirect, session, render_template
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_login import logout_user
 import libvirt_connec
-
+host_projet = '192.168.10.38'
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 blueprint = make_google_blueprint()
 app.register_blueprint(blueprint, url_prefix="/accueil/")
 
-host_projet = '192.168.10.38'
+
 
 google_auth = GoogleClient(
     client_id=("554229061086-np1qvffgq6gi1f6njg99qkeqt4h2gaut"
                ".apps.googleusercontent.com"),
     client_secret="XqTsoS6DXq-W0KgTqvQISBOM",
-    redirect_uri="http://"+host_projet+"/google/oauth2callback",
+    redirect_uri="http://"+host_projet+":80/google/oauth2callback",
 
 )
 
