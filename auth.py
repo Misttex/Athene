@@ -1,3 +1,4 @@
+# -*-coding:Latin-1 -*
 import os
 import logging
 import requests
@@ -7,7 +8,7 @@ from flask import Flask, request, redirect, session, render_template
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_login import logout_user
 import libvirt_connec
-host_projet = '192.168.10.38'
+host_projet = 'localhost'
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 blueprint = make_google_blueprint()
@@ -23,13 +24,13 @@ google_auth = GoogleClient(
 
 )
 
-#Par default si aucune route est spÃ©cifier envoie vers la route /Logout
+#Par default si aucune route est spécifier envoie vers la route /Logout
 @app.route("/")
 def index():
     return redirect("/logout")
 
 
-#Route de dÃ©connection
+#Route de déconnection
 #Supprimer le token google
 @app.route("/logout")
 def logout():
@@ -87,7 +88,7 @@ def google_oauth2callback():
 
 
 
-#Route pour afficher la page de crÃ©ation VM
+#Route pour afficher la page de création VM
 @app.route("/newVM")
 def newVM():
     if not session.get("access_token"):
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
 """
 def add_admin():
-    utilisateur = 'remplacer par la variable utlisateur selectionnÃ©'
+    utilisateur = 'remplacer par la variable utlisateur selectionné'
     with open('new_users.txt') and open('customers.txt') as addadmin:
         if user in addadmin.read():
             file = open('admins.txt', "a")
@@ -147,7 +148,7 @@ def add_admin():
 
 
 def add_customer():
-    utilisateur = 'remplacer par la variable utlisateur selectionnÃ©'
+    utilisateur = 'remplacer par la variable utlisateur selectionné'
     with open('new_users.txt') as addcustomer:
         if user in addcustomer.read():
             file = open('customers.txt', "a")
