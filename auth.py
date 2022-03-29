@@ -1,6 +1,7 @@
 # -*-coding:Latin-1 -*
 import os
 import logging
+import uuid
 import requests
 from requests_oauth2.services import GoogleClient
 from requests_oauth2 import OAuth2BearerToken
@@ -131,6 +132,29 @@ def newVM():
     return render_template("newVM.html",
                            name=" Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
+
+@app.route("/creationVM")
+def newVM():
+    nom = request.form['nom']  # id="nom" pour l'input ciblé.
+    coordX = request.form['coordX']  # id="coordX" pour l'input ciblé.
+    coordY = request.form['coordY']  # etc ...
+
+    conn = libvirt.open("qemu:///system")
+    le_uuid = str(uuid.uuid4())
+    le_nom = 'test2'
+    xmlconfig = '<domain type="kvm"> <name>' + le_nom + '</name> <uuid>' + le_uuid + '</uuid> <metadata> <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0"> <libosinfo:os id="http://debian.org/debian/10"/> </libosinfo:libosinfo> </metadata> <memory>1048576</memory> <currentMemory>1048576</currentMemory> <vcpu>2</vcpu> <os> <type arch="x86_64" machine="q35">hvm</type> <boot dev="hd"/> </os> <features> <acpi/> <apic/> <vmport state="off"/> </features> <cpu mode="host-model"/> <clock offset="utc"> <timer name="rtc" tickpolicy="catchup"/> <timer name="pit" tickpolicy="delay"/> <timer name="hpet" present="no"/> </clock> <pm> <suspend-to-mem enabled="no"/> <suspend-to-disk enabled="no"/> </pm> <devices> <emulator>/usr/bin/qemu-system-x86_64</emulator> <disk type="file" device="disk"> <driver name="qemu" type="qcow2"/> <source file="/var/lib/libvirt/images/debian7server.qcow2"/> <target dev="vda" bus="virtio"/> </disk> <disk type="file" device="cdrom"> <driver name="qemu" type="raw"/> <source file="/home/admin/Téléchargements"/> <target dev="sda" bus="sata"/> <readonly/> </disk> <controller type="usb" model="qemu-xhci" ports="15"/> <interface type="network"> <source network="default"/> <mac address="52:54:00:ac:b4:d8"/> <model type="virtio"/> </interface> <console type="pty"/> <channel type="unix"> <source mode="bind"/> <target type="virtio" name="org.qemu.guest_agent.0"/> </channel> <channel type="spicevmc"> <target type="virtio" name="com.redhat.spice.0"/> </channel> <input type="tablet" bus="usb"/> <graphics type="spice" port="-1" tlsPort="-1" autoport="yes"> <image compression="off"/> </graphics> <sound model="ich9"/> <video> <model type="qxl"/> </video> <redirdev bus="usb" type="spicevmc"/> <redirdev bus="usb" type="spicevmc"/> <memballoon model="virtio"/> <rng model="virtio"> <backend model="random">/dev/urandom</backend> </rng> </devices> </domain>'
+    print(xmlconfig)
+    dom = conn.createXML(xmlconfig, 0)
+    print(dom, dom.name())
+
+    if not session.get("access_token"):
+        return redirect("/logout")
+    with requests.Session() as s:
+        s.auth = OAuth2BearerToken(session["access_token"])
+        r = s.get("https://www.googleapis.com/plus/v1/people/me")
+    r.raise_for_status()
+    data = r.json()
+    return return render_template("newVM.html",name=" Bonjour, {}".format(data["displayName"]),url=format(data["image"]["url"]))
 
 #Route pour afficher la page pour consulter toutes les VM
 @app.route("/allVM")
