@@ -154,7 +154,9 @@ def newVM():
         r = s.get("https://www.googleapis.com/plus/v1/people/me")
     r.raise_for_status()
     data = r.json()
-    return return render_template("newVM.html",name=" Bonjour, {}".format(data["displayName"]),url=format(data["image"]["url"]))
+    return render_template("newVM.html",
+                           name=" Bonjour, {}".format(data["displayName"]),
+                           url=format(data["image"]["url"]))
 
 #Route pour afficher la page pour consulter toutes les VM
 @app.route("/allVM")
