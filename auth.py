@@ -134,7 +134,7 @@ def newVM():
                            url=format(data["image"]["url"]))
 
 @app.route("/creationVM")
-def newVM():
+def creationVM():
     nom = request.form['nom']  # id="nom" pour l'input ciblé.
     coordX = request.form['coordX']  # id="coordX" pour l'input ciblé.
     coordY = request.form['coordY']  # etc ...
