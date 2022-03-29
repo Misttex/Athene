@@ -135,9 +135,9 @@ def newVM():
 
 @app.route("/creationVM")
 def creationVM():
-    nom = request.form['nom']  # id="nom" pour l'input ciblé.
+    '''nom = request.form['nom']  # id="nom" pour l'input ciblé.
     coordX = request.form['coordX']  # id="coordX" pour l'input ciblé.
-    coordY = request.form['coordY']  # etc ...
+    coordY = request.form['coordY']  # etc ...'''
 
     conn = libvirt.open("qemu:///system")
     le_uuid = str(uuid.uuid4())
@@ -154,6 +154,7 @@ def creationVM():
         r = s.get("https://www.googleapis.com/plus/v1/people/me")
     r.raise_for_status()
     data = r.json()
+
     return render_template("newVM.html",
                            name=" Bonjour, {}".format(data["displayName"]),
                            url=format(data["image"]["url"]))
