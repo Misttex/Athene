@@ -115,7 +115,7 @@ def home():
                 "nbcpus": str(cpus),
             }
             listVMPerso.append(tab)'''
-        return render_template('home/home.html', listVMPerso=listVMPerso, username=session['username'], title="Home")
+        return render_template('home/home.html', listVMPerso=0, username=session['username'], title="Home")
     return redirect(url_for('login'))
 
 
