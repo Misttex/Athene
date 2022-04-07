@@ -69,7 +69,7 @@ def register():
 @app.route('/athene/home')
 def home():
     if 'loggedin' in session:
-        def size_format(size_in_bytes, unit):
+        '''def size_format(size_in_bytes, unit):
             if unit == 'B':
                 return size_in_bytes * 1024
             elif unit == 'MB':
@@ -114,7 +114,7 @@ def home():
                 "mem": size_format(mem, 'GB'),
                 "nbcpus": str(cpus),
             }
-            listVMPerso.append(tab)
+            listVMPerso.append(tab)'''
         return render_template('home/home.html', listVMPerso=listVMPerso, username=session['username'], title="Home")
     return redirect(url_for('login'))
 
@@ -122,7 +122,7 @@ def home():
 @app.route("/athene/start_stop_machine", methods=['GET', 'POST'])
 def start_stop_machine():
     if 'loggedin' in session:
-        import time
+        '''import time
         name = request.form['name']
         conn = libvirt.open("qemu:///system")
         vm = conn.lookupByName(name)
@@ -137,7 +137,7 @@ def start_stop_machine():
                     msg_vm = 'close'
         else:
             vm.create()
-            msg_vm = 'open'
+            msg_vm = 'open'       '''
         return render_template('home/home.html', username=session['username'], title="Home")
     return redirect(url_for('login'))
 
