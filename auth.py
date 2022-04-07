@@ -1,239 +1,198 @@
-# -*-coding:Latin-1 -*
-import os
 import logging
-import uuid
-import requests
-from requests_oauth2.services import GoogleClient
-from requests_oauth2 import OAuth2BearerToken
-from flask import Flask, request, redirect, session, render_template
-from flask_dance.contrib.google import make_google_blueprint, google
-from flask_login import logout_user
-import pika
+import os
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+import re
 import libvirt
 
-host_projet = 'localhost'
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
-blueprint = make_google_blueprint()
-app.register_blueprint(blueprint, url_prefix="/accueil/")
+hote = '192.168.1.82'
 
 
-
-google_auth = GoogleClient(
-    client_id=("554229061086-np1qvffgq6gi1f6njg99qkeqt4h2gaut"
-               ".apps.googleusercontent.com"),
-    client_secret="XqTsoS6DXq-W0KgTqvQISBOM",
-    redirect_uri="http://"+host_projet+":5000/google/oauth2callback",
-
-)
-
-#Par default si aucune route est spï¿½cifier envoie vers la route /Logout
 @app.route("/")
 def index():
-    return redirect("/logout")
+    return redirect("/athene/")
 
 
-#Route de dï¿½connection
-#Supprimer le token google
-@app.route("/logout")
-def logout():
-    if session.get("access_token"):
-        token = session["access_token"]
-        resp = google.post(
-            "https://accounts.google.com/o/oauth2/revoke",
-            params={"token": token},
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
-        )
-        del token
-        return render_template("login.html")
-    else:
-        return render_template("login.html")
+mysql = create_engine("mysql+pymysql://root:root@localhost/athene")
 
-#Route pour afficher la page d'accueil
-@app.route("/accueil/")
-def google_index():
-    if not session.get("access_token"):
-        return redirect("/logout")
-    with requests.Session() as s:
-        s.auth = OAuth2BearerToken(session["access_token"])
-        r = s.get("https://www.googleapis.com/plus/v1/people/me")
-    r.raise_for_status()
-    data = r.json()
 
-    listVMPerso = []
-    conn = libvirt.open("qemu:///system")
-    mes_vms = conn.listDefinedDomains()
-    domains = conn.listAllDomains(0)
-    for domain in domains:
-        dom = conn.lookupByName(domain.name())
-        state, maxmem, mem, cpus, cput = dom.info()
-        if state == libvirt.VIR_DOMAIN_NOSTATE:
-            state = 'VIR_DOMAIN_NOSTATE'
-        elif state == libvirt.VIR_DOMAIN_RUNNING:
-            state = '2'
-        elif state == libvirt.VIR_DOMAIN_BLOCKED:
-            state = '0'
-        elif state == libvirt.VIR_DOMAIN_PAUSED:
-            state = '1'
-        elif state == libvirt.VIR_DOMAIN_SHUTDOWN:
-            state = '0'
-        elif state == libvirt.VIR_DOMAIN_SHUTOFF:
-            state = '0'
-        elif state == libvirt.VIR_DOMAIN_CRASHED:
-            state = '0'
-        elif state == libvirt.VIR_DOMAIN_PMSUSPENDED:
-            state = '1'
+@app.route('/athene/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+        username = request.form['username']
+        password = request.form['password']
+        db = scoped_session(sessionmaker(bind=mysql))
+        account = db.execute("SELECT * FROM accounts WHERE username =:username AND password =:password",
+                             {"username": username, "password": password}).fetchone()
+        if account:
+            session['loggedin'] = True
+            session['id'] = account['id']
+            session['username'] = account['username']
+            return redirect(url_for('home'))
         else:
-            state = 'inconnu'
-        tab = {
-            "nom_machine": dom.name(),
-            "etat": state,
-            "uuid": dom.UUIDString(),
-        }
-        listVMPerso.append(tab)
-
-    return render_template("index.html",
-                           name=" Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]),
-                           listVMPerso=listVMPerso)
-
-#Verification sur l'utilisateur est connecter
-@app.route("/google/oauth2callback")
-def google_oauth2callback():
-    code = request.args.get("code")
-    error = request.args.get("error")
-    if error:
-        return "error :( {!r}".format(error)
-    if not code:
-        return redirect(google_auth.authorize_url(
-            scope=["profile", "email"],
-            response_type="code",
-        ))
-    usertoken = google_auth.get_token(
-        code=code,
-        grant_type="authorization_code",
-    )
-    session["access_token"] = usertoken.get("access_token")
-    return redirect("/accueil/")
+            flash("Nom d'utilisateur / Mot de passe incorrect!", "danger")
+    return render_template('auth/login.html', title="Connexion")
 
 
+@app.route('/athene/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
+        db = scoped_session(sessionmaker(bind=mysql))
+        account = db.execute("SELECT * FROM accounts WHERE username LIKE :username", {"username": username}).fetchone()
 
-#Route pour afficher la page de crï¿½ation VM
-@app.route("/newVM")
-def newVM():
-    if not session.get("access_token"):
-        return redirect("/logout")
-    with requests.Session() as s:
-        s.auth = OAuth2BearerToken(session["access_token"])
-        r = s.get("https://www.googleapis.com/plus/v1/people/me")
-    r.raise_for_status()
-    data = r.json()
+        if account:
+            flash("Account already exists!", "danger")
+        elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            flash("Invalid email address!", "danger")
+        elif not re.match(r'[A-Za-z0-9]+', username):
+            flash("Username must contain only characters and numbers!", "danger")
+        elif not username or not password or not email:
+            flash("Incorrect username/password!", "danger")
+        else:
+            db.execute("INSERT INTO accounts(username,email,password) VALUES (:username, :email, :password)",
+                       {"username": username, "email": email, "password": password})
+            db.commit()
+            flash("You have successfully registered!", "success")
+            return redirect(url_for('login'))
 
-    return render_template("newVM.html",
-                           name=" Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]))
+    elif request.method == 'POST':
+        flash("Please fill out the form!", "danger")
+    return render_template('auth/register.html', title="Register")
 
-@app.route("/creationVM")
-def creationVM():
-    '''nom = request.form['nom']  # id="nom" pour l'input ciblé.
-    coordX = request.form['coordX']  # id="coordX" pour l'input ciblé.
-    coordY = request.form['coordY']  # etc ...'''
 
-    conn = libvirt.open("qemu:///system")
-    le_uuid = str(uuid.uuid4())
-    le_nom = 'test2'
-    xmlconfig = '<domain type="kvm"> <name>' + le_nom + '</name> <uuid>' + le_uuid + '</uuid> <metadata> <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0"> <libosinfo:os id="http://debian.org/debian/10"/> </libosinfo:libosinfo> </metadata> <memory>1048576</memory> <currentMemory>1048576</currentMemory> <vcpu>2</vcpu> <os> <type arch="x86_64" machine="q35">hvm</type> <boot dev="hd"/> </os> <features> <acpi/> <apic/> <vmport state="off"/> </features> <cpu mode="host-model"/> <clock offset="utc"> <timer name="rtc" tickpolicy="catchup"/> <timer name="pit" tickpolicy="delay"/> <timer name="hpet" present="no"/> </clock> <pm> <suspend-to-mem enabled="no"/> <suspend-to-disk enabled="no"/> </pm> <devices> <emulator>/usr/bin/qemu-system-x86_64</emulator> <disk type="file" device="disk"> <driver name="qemu" type="qcow2"/> <source file="/var/lib/libvirt/images/debian7server.qcow2"/> <target dev="vda" bus="virtio"/> </disk> <disk type="file" device="cdrom"> <driver name="qemu" type="raw"/> <source file="/home/admin/Téléchargements"/> <target dev="sda" bus="sata"/> <readonly/> </disk> <controller type="usb" model="qemu-xhci" ports="15"/> <interface type="network"> <source network="default"/> <mac address="52:54:00:ac:b4:d8"/> <model type="virtio"/> </interface> <console type="pty"/> <channel type="unix"> <source mode="bind"/> <target type="virtio" name="org.qemu.guest_agent.0"/> </channel> <channel type="spicevmc"> <target type="virtio" name="com.redhat.spice.0"/> </channel> <input type="tablet" bus="usb"/> <graphics type="spice" port="-1" tlsPort="-1" autoport="yes"> <image compression="off"/> </graphics> <sound model="ich9"/> <video> <model type="qxl"/> </video> <redirdev bus="usb" type="spicevmc"/> <redirdev bus="usb" type="spicevmc"/> <memballoon model="virtio"/> <rng model="virtio"> <backend model="random">/dev/urandom</backend> </rng> </devices> </domain>'
-    print(xmlconfig)
-    dom = conn.createXML(xmlconfig, 0)
-    if conn is None: raise libvirtError('virDomainCreateXML( failed',conn.self)
-    print(dom, dom.name())
+@app.route('/athene/home')
+def home():
+    if 'loggedin' in session:
+        def size_format(size_in_bytes, unit):
+            if unit == 'B':
+                return size_in_bytes * 1024
+            elif unit == 'MB':
+                return size_in_bytes / (1024)
+            elif unit == 'GB':
+                return size_in_bytes / (1024 * 1024)
+            else:
+                return size_in_bytes
 
-    if not session.get("access_token"):
-        return redirect("/logout")
-    with requests.Session() as s:
-        s.auth = OAuth2BearerToken(session["access_token"])
-        r = s.get("https://www.googleapis.com/plus/v1/people/me")
-    r.raise_for_status()
-    data = r.json()
+        listVMPerso = []
+        conn = libvirt.open("qemu:///system")
+        mes_vms = conn.listDefinedDomains()
+        domains = conn.listAllDomains(0)
+        for domain in domains:
+            dom = conn.lookupByName(domain.name())
+            state, maxmem, mem, cpus, cput = dom.info()
+            active = dom.isActive()
+            if state == libvirt.VIR_DOMAIN_NOSTATE:
+                state = 'VIR_DOMAIN_NOSTATE'
+            elif state == libvirt.VIR_DOMAIN_RUNNING:
+                state = 'En cours de fonctionnement'
+            elif state == libvirt.VIR_DOMAIN_BLOCKED:
+                state = 'Bloqué'
+            elif state == libvirt.VIR_DOMAIN_PAUSED:
+                state = 'En pause'
+            elif state == libvirt.VIR_DOMAIN_SHUTDOWN:
+                state = 'Eteinte'
+            elif state == libvirt.VIR_DOMAIN_SHUTOFF:
+                state = 'Eteinte'
+            elif state == libvirt.VIR_DOMAIN_CRASHED:
+                state = 'Crash'
+            elif state == libvirt.VIR_DOMAIN_PMSUSPENDED:
+                state = 'Suspendue'
+            else:
+                state = 'inconnu'
+            tab = {
+                "nom_machine": dom.name(),
+                "etat": state,
+                "active": active,
+                "uuid": dom.UUIDString(),
+                "maxmem": size_format(maxmem, 'GB'),
+                "mem": size_format(mem, 'GB'),
+                "nbcpus": str(cpus),
+            }
+            listVMPerso.append(tab)
+        return render_template('home/home.html', listVMPerso=listVMPerso, username=session['username'], title="Home")
+    return redirect(url_for('login'))
 
-    return render_template("newVM.html",
-                           name=" Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]))
 
-#Route pour afficher la page pour consulter toutes les VM
-@app.route("/allVM")
-def allVM():
-    if not session.get("access_token"):
-        return redirect("/logout")
-    with requests.Session() as s:
-        s.auth = OAuth2BearerToken(session["access_token"])
-        r = s.get("https://www.googleapis.com/plus/v1/people/me")
-    r.raise_for_status()
-    data = r.json()
+@app.route("/athene/start_stop_machine", methods=['GET', 'POST'])
+def start_stop_machine():
+    if 'loggedin' in session:
+        import time
+        name = request.form['name']
+        conn = libvirt.open("qemu:///system")
+        vm = conn.lookupByName(name)
+        if vm.isActive():
+            seconde = 0
+            while vm.isActive():
+                vm.shutdown()
+                time.sleep(1)
+                seconde += 1
+                if seconde >= 300:
+                    vm.destroy()
+                    msg_vm = 'close'
+        else:
+            vm.create()
+            msg_vm = 'open'
+        return render_template('home/home.html', username=session['username'], title="Home")
+    return redirect(url_for('login'))
 
-    listVM = []
-    conn = libvirt.open("qemu:///system")
-    mes_vms = conn.listDefinedDomains()
-    domains = conn.listAllDomains(0)
-    for domain in domains:
-        dom = conn.lookupByName(domain.name())
-        state, maxmem, mem, cpus, cput = dom.info()
-        tab = { 
-            "nom_machine":dom.name(),
-        }
-        listVM.append(tab)
 
-    return render_template("allVM.html",
-                           name=" Bonjour, {}".format(data["displayName"]),
-                           url=format(data["image"]["url"]),
-                           listVM=listVM)
+@app.route("/athene/creationVm", methods=['GET', 'POST'])
+def creationVm():
+    if 'loggedin' in session:
+        return render_template('gestion/creation.html', username=session['username'], title="Création")
+    return redirect(url_for('login'))
+
+
+@app.route("/athene/delete_machine", methods=['GET', 'POST'])
+def delete_machine():
+    import subprocess
+    if 'loggedin' in session:
+        le_nom = request.form['name']
+        create_img_result = subprocess.run(['virsh', 'undefine', le_nom, '--remove-all-storage'])
+        flash(le_nom + ' La machine à bien été supprimée', "danger")
+    return redirect(url_for('login'))
+
+
+@app.route("/athene/creationVmFunction", methods=['GET', 'POST'])
+def creationVmFunction():
+    import subprocess
+    import uuid
+    if 'loggedin' in session:
+        def createqcow(vm_id: str, image_name: str):
+            base_image = '/var/lib/libvirt/images/' + image_name + '.qcow2'
+            user_image = '/var/lib/libvirt/images/' + vm_id + '.qcow2'
+            create_img_result = subprocess.run(
+                ['qemu-img', 'create', '-f', 'qcow2', '-b', str(base_image), '-F', 'qcow2', str(user_image)])
+            return user_image
+
+        def createVm(le_nom: str, memoire):
+            qcow2 = createqcow(le_nom, 'debian11')
+            le_uuid = str(uuid.uuid4())
+            conn = libvirt.open("qemu:///system")
+            xmlconfig = '<domain type="kvm"> <name>' + le_nom + '</name> <uuid>' + le_uuid + '</uuid> <metadata> <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0"> <libosinfo:os id="http://debian.org/debian/10"/> </libosinfo:libosinfo> </metadata> <memory>' + memoire + '</memory> <currentMemory>' + memoire + '</currentMemory> <vcpu>2</vcpu> <os> <type arch="x86_64" machine="q35">hvm</type> <boot dev="hd"/> </os> <features> <acpi/> <apic/> <vmport state="off"/> </features> <cpu mode="host-model"/> <clock offset="utc"> <timer name="rtc" tickpolicy="catchup"/> <timer name="pit" tickpolicy="delay"/> <timer name="hpet" present="no"/> </clock> <pm> <suspend-to-mem enabled="no"/> <suspend-to-disk enabled="no"/> </pm> <devices>  <disk type="file" device="disk"> <driver name="qemu" type="qcow2"/> <source file="' + qcow2 + '"/> <target dev="vda" bus="virtio"/> </disk> <disk type="file" device="cdrom"> <driver name="qemu" type="raw"/>  <target dev="sda" bus="sata"/> <readonly/> </disk> <controller type="usb" model="qemu-xhci" ports="15"/> <interface type="network"> <source network="default"/> <model type="virtio"/> </interface> <console type="pty"/> <channel type="unix"> <source mode="bind"/> <target type="virtio" name="org.qemu.guest_agent.0"/> </channel> <channel type="spicevmc"> <target type="virtio" name="com.redhat.spice.0"/> </channel> <input type="tablet" bus="usb"/> <graphics type="spice" port="-1" tlsPort="-1" autoport="yes"> <image compression="off"/> </graphics> <sound model="ich9"/> <video> <model type="qxl"/> </video> <redirdev bus="usb" type="spicevmc"/> <redirdev bus="usb" type="spicevmc"/> <memballoon model="virtio"/> <rng model="virtio"> <backend model="random">/dev/urandom</backend> </rng> </devices> </domain>'
+            dom = conn.createXML(xmlconfig, 0)
+            return dom
+
+        le_nom = request.form['name']
+        memoire = request.form['memoire']
+        dom = createVm(le_nom, memoire)
+        flash(le_nom + ' La machine à bien été crée', "danger")
+    return redirect(url_for('login'))
+
+
+@app.route('/athene/profile')
+def profile():
+    if 'loggedin' in session:
+        return render_template('auth/profile.html', username=session['username'], title="Profile")
+    return redirect(url_for('login'))
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True , host=host_projet)
-
-
-
-
-"""
-def add_admin():
-    utilisateur = 'remplacer par la variable utlisateur selectionnï¿½'
-    with open('new_users.txt') and open('customers.txt') as addadmin:
-        if user in addadmin.read():
-            file = open('admins.txt', "a")
-            file.writelines(f'{user}\n')
-            file.close()
-            with open("new_users.txt", "r") as delete:
-                lines = delete.readlines()
-            with open("new_users.txt", "w") as delete:
-                for line in lines:
-                    if line.strip("\n") != utilisateur:
-                        delete.write(line)
-
-
-def add_customer():
-    utilisateur = 'remplacer par la variable utlisateur selectionnï¿½'
-    with open('new_users.txt') as addcustomer:
-        if user in addcustomer.read():
-            file = open('customers.txt', "a")
-            file.writelines(f'{user}\n')
-            file.close()
-            with open("new_users.txt", "r") as delete:
-                lines = delete.readlines()
-            with open("new_users.txt", "w") as delete:
-                for line in lines:
-                    if line.strip("\n") != utilisateur:
-                        delete.write(line)
-    file.close()
-
-
-def remove_permission():
-    utilisateur = ''
-    with open("new_users.txt", "r") and open("customers.txt", "r") and open("admins.txt", "r") as delete:
-        lines = delete.readlines()
-    with open("new_users.txt", "w") and ("customers", "w") and ("admins.txt", "w") as delete:
-        for line in lines:
-            if line.strip("\n") != utilisateur:
-                delete.write(line)
-    file.close()
-"""
+    app.run(debug=True, host=hote, port="1500")
