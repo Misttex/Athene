@@ -164,7 +164,7 @@ def creationVmFunction():
     import uuid
     if 'loggedin' in session:
         channel.basic_publish(exchange='', routing_key='creation', body='Hello World!')
-        print(" [x] Sent 'Hello World!'")
+        print("Action creation d'une VM!'")
     return redirect(url_for('login'))
 
 
