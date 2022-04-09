@@ -6,8 +6,8 @@
 	{% include "includes/alert.html" %}
     <h1>Register</h1>
     <div class="links">
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}" class="active">Register</a>
+        <a href="{{ url_for('login') }}">Connection</a>
+        <a href="{{ url_for('register') }}" class="active">S'enregistrer</a>
     </div>
     <form action="{{ url_for('register') }}" method="post" autocomplete="off">
         <label for="username">
